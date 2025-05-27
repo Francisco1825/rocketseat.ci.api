@@ -22,6 +22,6 @@ jobs:
           node-version: ${{matrix.node}}
           cache: "npm"
       - run: npm install
-      
+
       - name: Build docker image
-        run: docker build -t rocketseat-ci-api:latest .
+        run: docker build -t rocketseat-ci-api:latest DevOps-main/api/dockerfile DevOps-main/api
