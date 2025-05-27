@@ -26,8 +26,8 @@ jobs:
       - name: Generate tag
         id: generate_tag
         run: |
-          SHA=s(echo $HITHUB_SHA | head -c7)
+          SHA=s(echo $GITHUB_SHA | head -c7)
           echo "sha=$SHA" >> $GITHUB_OUTPUT
 
       - name: Build Docker image
-        run: docker build -t rocketseat-ci-api:${{steps.generate_tag.outputs}} -f  DevOps-main/api/dockerfile DevOps-main/api
+        run: docker build -t rocketseat-ci-api:${{steps.generate_tag.outputs.sha}} -f  DevOps-main/api/dockerfile DevOps-main/api
