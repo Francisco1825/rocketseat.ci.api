@@ -11,24 +11,17 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: [18, 20, 24]  # Testando em múltiplas versões de Node.js
+        node: [18, 20, 24]
 
     steps:
-      # 1. Faz o checkout do código
-      - name: Checkout do código
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # 2. Instala a versão do Node e usa cache do npm
-      - name: Setup Node.js ${{ matrix.node }}
+      - name: Setup node | ${{matrix.node}}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
+          node-version: ${{matrix.node}}
           cache: "npm"
+      - run: npm install
 
-      # 3. Instala as dependências do projeto
-      - name: Instalar dependências
-        run: npm install
-
-      # 4. Build da imagem Docker
       - name: Build Docker image
-        run: docker build -t rocketseat-ci-api:latest -f DevOps-main/api/dockerfile DevOps-main/api
+        run: docker build -t rocketseat-ci-api:latest DevOps-main/api/dockerfile DevOps-main/api
