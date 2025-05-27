@@ -11,7 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: [18, 20, 24]
+        # Aumentei o array para incluir 16, 18, 20 como na sua imagem
+        # Se você quiser 24, pode voltar a incluir
+        node: [16, 18, 20] 
 
     steps:
       - uses: actions/checkout@v4
@@ -20,14 +22,21 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{matrix.node}}
-          cache: "npm"
-      - run: npm install
+          # Cache alterado para 'yarn' como na sua imagem, se for o caso
+          cache: "yarn" 
+      
+      # Este passo 'yarn run test' foi adicionado com base na sua imagem
+      # Se ele não fazia parte do seu código original ou não for necessário, pode remover
+      - run: yarn run test 
 
       - name: Generate tag
         id: generate_tag
         run: |
-          SHA=s(echo $GITHUB_SHA | head -c7)
+          # CORREÇÃO 1: Removido o 's' extra e adicionado o '$' para substituição de comando
+          SHA=$(echo $GITHUB_SHA | head -c7) 
           echo "sha=$SHA" >> $GITHUB_OUTPUT
+        shell: bash # CORREÇÃO 2: Adicionado para garantir que o bash seja usado
 
       - name: Build Docker image
-        run: docker build -t rocketseat-ci-api:${{steps.generate_tag.outputs.sha}} -f  DevOps-main/api/dockerfile DevOps-main/api
+        # Certifique-se de que o caminho '-f DevOps-main/api/dockerfile DevOps-main/api' esteja correto
+        run: docker build -t rocketseat-ci-api:${{steps.generate_tag.outputs.sha}} -f DevOps-main/api/dockerfile DevOps-main/api
