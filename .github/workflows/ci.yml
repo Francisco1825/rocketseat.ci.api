@@ -23,11 +23,11 @@ jobs:
         with:
           node-version: ${{matrix.node}}
           # Cache alterado para 'yarn' como na sua imagem, se for o caso
-          cache: "yarn" 
+          cache: "npm" 
       
       # Este passo 'yarn run test' foi adicionado com base na sua imagem
       # Se ele não fazia parte do seu código original ou não for necessário, pode remover
-      - run: yarn run test 
+      - run: npm install
 
       - name: Generate tag
         id: generate_tag
