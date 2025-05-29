@@ -32,7 +32,7 @@ jobs:
       - name: Generate tag
         id: generate_tag
         run: |
-          # CORREÇÃO 1: Removido o 's' extra e adicionado o '$' para substituição de comando
+
           SHA=$(echo $GITHUB_SHA | head -c7) 
           echo "sha=$SHA" >> $GITHUB_OUTPUT
         shell: bash # CORREÇÃO 2: Adicionado para garantir que o bash seja usado
