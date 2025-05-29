@@ -18,10 +18,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup node | ${{matrix.node}}
+      - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: ${{matrix.node}}
+          node-version: 24
           # Cache alterado para 'yarn' como na sua imagem, se for o caso
           cache: "npm"
 
