@@ -9,11 +9,11 @@ jobs:
   build:
     name: "Build and Push"
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        # Aumentei o array para incluir 16, 18, 20 como na sua imagem
-        # Se você quiser 24, pode voltar a incluir
-        node: [16, 18, 20]
+    #strategy:
+    #matrix:
+    # Aumentei o array para incluir 16, 18, 20 como na sua imagem
+    # Se você quiser 24, pode voltar a incluir
+    #node: [16, 18, 20]
 
     steps:
       - uses: actions/checkout@v4
