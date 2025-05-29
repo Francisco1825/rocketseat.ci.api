@@ -41,9 +41,15 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Docker image
-        # Certifique-se de que o caminho '-f DevOps-main/api/dockerfile DevOps-main/api' esteja correto
-        run: docker build -t franciscodouglas/rocketseat-ci-api:${{steps.generate_tag.outputs.sha}} -f DevOps-main/api/dockerfile DevOps-main/api
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: franciscodouglas/rocketseat-ci-api:${{steps.generate_tag.outputs.sha}},franciscodouglas/rocketseat-ci-api:latest
 
-      - name: Push image
-        run: docker push franciscodouglas/rocketseat-ci-api:${{steps.generate_tag.outputs.sha}}
+      # - name: Build Docker image
+      #   # Certifique-se de que o caminho '-f DevOps-main/api/dockerfile DevOps-main/api' esteja correto
+      #   run: docker build -t franciscodouglas/rocketseat-ci-api: -f DevOps-main/api/dockerfile DevOps-main/api
+
+      # - name: Push image
+      #   run: docker push franciscodouglas/rocketseat-ci-api:
