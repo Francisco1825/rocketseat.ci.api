@@ -38,7 +38,7 @@ jobs:
         shell: bash # CORREÇÃO 2: Adicionado para garantir que o bash seja usado
 
       - name: Login into the container regist
-        uses: dockerlogin-action@v
+        uses: dockerlogin-action@v1
         with:
           username: ${{secrets.DOCKERHUB_USERNAME}}
           password: ${{secrets.DOCKERHUB.TOEKN}}
