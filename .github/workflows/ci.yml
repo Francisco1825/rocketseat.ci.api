@@ -39,7 +39,7 @@ jobs:
         uses: docker/login-action@v2
         with:
           username: franciscodouglas
-          password: dckr_pat_blGxTK-JjKM44oRDN6yP22sJl2c
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build Docker image
         # Certifique-se de que o caminho '-f DevOps-main/api/dockerfile DevOps-main/api' esteja correto
