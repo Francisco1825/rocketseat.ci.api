@@ -13,7 +13,7 @@ jobs:
       matrix:
         # Aumentei o array para incluir 16, 18, 20 como na sua imagem
         # Se você quiser 24, pode voltar a incluir
-        node: [16, 18, 20] 
+        node: [16, 18, 20]
 
     steps:
       - uses: actions/checkout@v4
@@ -23,8 +23,8 @@ jobs:
         with:
           node-version: ${{matrix.node}}
           # Cache alterado para 'yarn' como na sua imagem, se for o caso
-          cache: "npm" 
-      
+          cache: "npm"
+
       # Este passo 'yarn run test' foi adicionado com base na sua imagem
       # Se ele não fazia parte do seu código original ou não for necessário, pode remover
       - run: npm install
@@ -37,6 +37,15 @@ jobs:
           echo "sha=$SHA" >> $GITHUB_OUTPUT
         shell: bash # CORREÇÃO 2: Adicionado para garantir que o bash seja usado
 
+      - name: Login into the container regist
+        uses: dockerlogin-action@v
+        with:
+          username: ${{secrets.DOCKERHUB_USERNAME}}
+          password: ${{secrets.DOCKERHUB.TOEKN}}
+
       - name: Build Docker image
         # Certifique-se de que o caminho '-f DevOps-main/api/dockerfile DevOps-main/api' esteja correto
-        run: docker build -t rocketseat-ci-api:${{steps.generate_tag.outputs.sha}} -f DevOps-main/api/dockerfile DevOps-main/api
+        run: docker build -t franciscodouglas/rocketseat-ci-api:${{steps.generate_tag.outputs.sha}} -f DevOps-main/api/dockerfile DevOps-main/api
+
+      - name: Push image
+        run: docker push franciscodouglas/rocketseat-ci-api:${{steps.generate_tag.outputs.sha}}
