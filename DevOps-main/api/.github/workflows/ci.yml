@@ -21,7 +21,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 20
           # Cache alterado para 'yarn' como na sua imagem, se for o caso
           cache: "npm"
 
@@ -45,6 +45,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
+          context: ./DevOps-main/api
+          file: ./DevOps-main/api/Dockerfile
           tags: franciscodouglas/rocketseat-ci-api:${{steps.generate_tag.outputs.sha}},franciscodouglas/rocketseat-ci-api:latest
 
       # - name: Build Docker image
