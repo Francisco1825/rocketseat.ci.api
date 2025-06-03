@@ -35,19 +35,28 @@ jobs:
           echo "sha=$SHA" >> $GITHUB_OUTPUT
         shell: bash # CORREÇÃO 2: Adicionado para garantir que o bash seja usado
 
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
+      - name: onfigure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4.1.0
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+            role-to-assume: ''
+            aws-region: us-east-2
+      - name: Login to AWS ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and Push
-        uses: docker/build-push-action@v5
-        with:
-          push: true
-          context: ./DevOps-main/api
-          file: ./DevOps-main/api/Dockerfile
-          tags: franciscodouglas/rocketseat-ci-api:${{steps.generate_tag.outputs.sha}},franciscodouglas/rocketseat-ci-api:latest
+      # - name: Login to DockerHub
+      #   uses: docker/login-action@v2
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # - name: Build and Push
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     push: true
+      #     context: ./DevOps-main/api
+      #     file: ./DevOps-main/api/Dockerfile
+      #     tags: franciscodouglas/rocketseat-ci-api:${{steps.generate_tag.outputs.sha}},franciscodouglas/rocketseat-ci-api:latest
 
       # - name: Build Docker image
       #   # Certifique-se de que o caminho '-f DevOps-main/api/dockerfile DevOps-main/api' esteja correto
