@@ -35,7 +35,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4.1.0
         with:
-          role-to-assume: arn:aws:iam:::231224359494:role/ecr-role  # Substitua SEU_AWS_ACCOUNT_ID pelo seu número real
+          role-to-assume: arn:aws:iam::231224359494:role/ecr-role  # Substitua SEU_AWS_ACCOUNT_ID pelo seu número real
           aws-region: us-east-2
 
       - name: Login to AWS ECR
