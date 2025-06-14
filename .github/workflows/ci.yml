@@ -35,18 +35,17 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4.1.0
         with:
-          role-to-assume: arn:aws:iam::231224359494:role/ecr-role  # Substitua SEU_AWS_ACCOUNT_ID pelo seu número real
+          role-to-assume: arn:aws:iam::231224359494:role/ecr-role  # Substitua pelo seu ARN real
           aws-region: us-east-1
 
       - name: Login to AWS ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # Seus passos de build e push de imagem Docker podem vir aqui
-
-      - name: Build ECR image
-        env: 
-          REGISTRY: ${{steps.login-ecr.outputs.registry}}
+      - name: Build and Push ECR image
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ steps.generate_tag.outputs.sha }}
         run: |
-          docker build -t $REGISTRY/rocketseat-ci:f1c93d3 -f DevOps-main/api/Dockerfile DevOps-main/api/
-          docker push -t 231224359494.dkr.ecr.us-east-1.amazonaws.com/rocketseat-ci:${{steps.generate_tag.outputs.sha}}
+          docker build -t $REGISTRY/rocketseat-ci:$IMAGE_TAG -f DevOps-main/api/Dockerfile DevOps-main/api/
+          docker push $REGISTRY/rocketseat-ci:$IMAGE_TAG
