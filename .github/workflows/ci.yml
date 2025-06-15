@@ -43,9 +43,23 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build and Push ECR image
+        id: build-docker-image
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ steps.generate_tag.outputs.sha }}
         run: |
           docker build -t $REGISTRY/rocketseat-ci:$IMAGE_TAG -f DevOps-main/api/Dockerfile DevOps-main/api/
           docker push $REGISTRY/rocketseat-ci:$IMAGE_TAG
+          SHA=$(echo $REGISTRY/rocketseat-ci:$IMAGE_TAG)
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+
+      - name: Deploy to App Runner
+        uses: awslabs/amazon-app-runner-deploy@main
+        with:
+          service: rockertseat-api
+          image: ${{steps.build-docker-image.outputs.image}}
+          access-role-arn: arn:aws:iam::231224359494:role/app-runner-role
+          region: us-east-1
+          cpu: 1
+          memory: 1
+          port: 3000
