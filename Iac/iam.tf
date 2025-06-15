@@ -46,7 +46,7 @@ resource "aws_iam_role" "app_runner_role" {
   }
 }
 
-##############################
+#############################
 # Anexar política AWSAppRunnerFullAccess à role do App Runner
 ##############################
 resource "aws_iam_role_policy_attachment" "app_runner_full_access" {
@@ -144,3 +144,4 @@ resource "aws_iam_role" "github_oidc_role" {
     IAC = true
   }
 }
+
