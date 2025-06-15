@@ -6,12 +6,12 @@ on:
       - main
 
 permissions:
-  id-token: write        # Essencial para OIDC
+  id-token: write
   contents: read
 
 jobs:
   build:
-    name: "Build and Push"
+    name: "Build and Deploy to App Runner"
     runs-on: ubuntu-latest
 
     steps:
@@ -35,7 +35,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4.1.0
         with:
-          role-to-assume: arn:aws:iam::231224359494:role/ecr-role  # Substitua pelo ARN real
+          role-to-assume: arn:aws:iam::231224359494:role/ecr-role  # Deve ter permissão correta
           aws-region: us-east-1
 
       - name: Login to Amazon ECR
@@ -58,9 +58,8 @@ jobs:
         with:
           service: rockertseat-api
           image: ${{ steps.build-docker-image.outputs.image }}
-          access-role-arn: arn:aws:iam::231224359494:role/app-runner-role  # Substitua pelo ARN real
+          access-role-arn: arn:aws:iam::231224359494:role/app-runner-role
           region: us-east-1
           cpu: 1
           memory: 1
           port: 3000
-          image-repository-type: ECR
