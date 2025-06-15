@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -25,41 +25,42 @@ jobs:
 
       - run: npm install
 
-      - name: Generate tag
+      - name: Generate short SHA tag
         id: generate_tag
         run: |
           SHA=$(echo $GITHUB_SHA | head -c7)
           echo "sha=$SHA" >> $GITHUB_OUTPUT
         shell: bash
 
-      - name: Configure AWS Credentials
+      - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4.1.0
         with:
-          role-to-assume: arn:aws:iam::231224359494:role/ecr-role  # Substitua pelo seu ARN real
+          role-to-assume: arn:aws:iam::231224359494:role/ecr-role  # Substitua pelo ARN real
           aws-region: us-east-1
 
-      - name: Login to AWS ECR
+      - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and Push ECR image
+      - name: Build and Push Docker Image to ECR
         id: build-docker-image
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ steps.generate_tag.outputs.sha }}
         run: |
-          docker build -t $REGISTRY/rocketseat-ci:$IMAGE_TAG -f DevOps-main/api/Dockerfile DevOps-main/api/
-          docker push $REGISTRY/rocketseat-ci:$IMAGE_TAG
-          SHA=$(echo $REGISTRY/rocketseat-ci:$IMAGE_TAG)
+          IMAGE=$REGISTRY/rocketseat-ci:$IMAGE_TAG
+          docker build -t $IMAGE -f DevOps-main/api/Dockerfile DevOps-main/api/
+          docker push $IMAGE
           echo "image=$IMAGE" >> $GITHUB_OUTPUT
 
       - name: Deploy to App Runner
         uses: awslabs/amazon-app-runner-deploy@main
         with:
           service: rockertseat-api
-          image: ${{steps.build-docker-image.outputs.image}}
-          access-role-arn: arn:aws:iam::231224359494:role/app-runner-role
+          image: ${{ steps.build-docker-image.outputs.image }}
+          access-role-arn: arn:aws:iam::231224359494:role/app-runner-role  # Substitua pelo ARN real
           region: us-east-1
           cpu: 1
           memory: 1
           port: 3000
+          image-repository-type: ECR
