@@ -45,7 +45,15 @@ resource "aws_iam_role" "app-runner-role" {
 }
 
 ##############################
-# Role para o GitHub Actions assumir via OIDC e acessar ECR e App Runner
+# Anexar política AWSAppRunnerFullAccess à role do App Runner
+##############################
+resource "aws_iam_role_policy_attachment" "app_runner_full_access" {
+  role       = aws_iam_role.app-runner-role.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSAppRunnerFullAccess"
+}
+
+##############################
+# Role para o GitHub Actions assumir via OIDC
 ##############################
 resource "aws_iam_role" "github_oidc_role" {
   name = "ecr-role"
@@ -103,16 +111,24 @@ resource "aws_iam_role" "github_oidc_role" {
           Resource = "*"
         },
         {
-          Sid = "IAMPermissions",
+          Sid = "IAMPassAppRunnerRole",
           Effect = "Allow",
-          Action = [
-            "iam:PassRole",
-            "iam:CreateServiceLinkedRole"
-          ],
+          Action = "iam:PassRole",
+          Resource = "arn:aws:iam::231224359494:role/app-runner-role",
+          Condition = {
+            StringEquals = {
+              "iam:PassedToService": "apprunner.amazonaws.com"
+            }
+          }
+        },
+        {
+          Sid = "CreateSLRForAppRunner",
+          Effect = "Allow",
+          Action = "iam:CreateServiceLinkedRole",
           Resource = "*",
           Condition = {
-            StringEqualsIfExists = {
-              "iam:AWSServiceName" = "build.apprunner.amazonaws.com"
+            StringEquals = {
+              "iam:AWSServiceName": "build.apprunner.amazonaws.com"
             }
           }
         }
@@ -123,12 +139,4 @@ resource "aws_iam_role" "github_oidc_role" {
   tags = {
     IAC = true
   }
-}
-
-##############################
-# Anexar política AWSAppRunnerFullAccess para a role app-runner-role
-##############################
-resource "aws_iam_role_policy_attachment" "app_runner_full_access" {
-  role       = aws_iam_role.app-runner-role.name
-  policy_arn = "arn:aws:iam::aws:policy/AWSAppRunnerFullAccess"
 }
