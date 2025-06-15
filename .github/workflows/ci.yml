@@ -53,13 +53,15 @@ jobs:
           docker push $IMAGE
           echo "image=$IMAGE" >> $GITHUB_OUTPUT
 
-      - name: Deploy to App Runner
+      - name: Deploy to app runnerAdd commentMore actions
         uses: awslabs/amazon-app-runner-deploy@main
         with:
-          service: rockertseat-api
+          service: rocketseat-api
           image: ${{ steps.build-docker-image.outputs.image }}
           access-role-arn: arn:aws:iam::231224359494:role/app-runner-role
-          region: us-east-1
+          region: us-east-2
           cpu: 1
-          memory: 1
+          memory: 2
           port: 3000
+
+          
