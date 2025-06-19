@@ -1,3 +1,6 @@
+# -------------------------------------------------------
+# ROLE: GitHub Actions (OIDC) - Assume para deploy + push
+# -------------------------------------------------------
 resource "aws_iam_role" "ecr_role" {
   name = "ecr-role"
 
@@ -12,7 +15,7 @@ resource "aws_iam_role" "ecr_role" {
         Action = "sts:AssumeRoleWithWebIdentity",
         Condition = {
           StringEquals = {
-            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com",
             "token.actions.githubusercontent.com:sub" = "repo:Francisco1825/rocketseat.ci.api:ref:refs/heads/main"
           }
         }
@@ -21,7 +24,8 @@ resource "aws_iam_role" "ecr_role" {
   })
 
   inline_policy {
-    name   = "ecr-and-apprunner-permissions"
+    name = "ecr-and-apprunner-permissions"
+
     policy = jsonencode({
       Version = "2012-10-17",
       Statement = [
@@ -73,4 +77,46 @@ resource "aws_iam_role" "ecr_role" {
   tags = {
     IAC = "True"
   }
+}
+
+# -------------------------------------------------------
+# ROLE: App Runner - Assume para puxar imagem do ECR
+# -------------------------------------------------------
+resource "aws_iam_role" "app_runner_service_role" {
+  name = "app-runner-service-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Principal = {
+        Service = "apprunner.amazonaws.com"
+      },
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_policy" "app_runner_ecr_policy" {
+  name        = "AppRunnerECRAccessPolicy"
+  description = "Policy for App Runner to access ECR"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Action = [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage"
+      ],
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "app_runner_ecr_attach" {
+  role       = aws_iam_role.app_runner_service_role.name
+  policy_arn = aws_iam_policy.app_runner_ecr_policy.arn
 }
