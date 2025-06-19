@@ -12,7 +12,7 @@ resource "aws_iam_role" "ecr_role" {
         Action = "sts:AssumeRoleWithWebIdentity",
         Condition = {
           StringEquals = {
-            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com",
+            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
             "token.actions.githubusercontent.com:sub" = "repo:Francisco1825/rocketseat.ci.api:ref:refs/heads/main"
           }
         }
@@ -21,7 +21,7 @@ resource "aws_iam_role" "ecr_role" {
   })
 
   inline_policy {
-    name = "ecr-and-apprunner-permissions"
+    name   = "ecr-and-apprunner-permissions"
     policy = jsonencode({
       Version = "2012-10-17",
       Statement = [
@@ -55,13 +55,13 @@ resource "aws_iam_role" "ecr_role" {
           Resource = "*"
         },
         {
-          Sid = "IAMPassRole",
+          Sid    = "IAMPassRole",
           Effect = "Allow",
           Action = "iam:PassRole",
           Resource = "arn:aws:iam::231224359494:role/app-runner-service-role"
         },
         {
-          Sid = "IAMCreateServiceLinkedRole",
+          Sid    = "IAMCreateServiceLinkedRole",
           Effect = "Allow",
           Action = "iam:CreateServiceLinkedRole",
           Resource = "*"
