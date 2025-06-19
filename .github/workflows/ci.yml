@@ -35,9 +35,8 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4.1.0
         with:
-          role-to-assume: arn:aws:iam::231224359494:role/github-app-runner-role
+          role-to-assume: arn:aws:iam::231224359494:role/ecr-role  # Deve ter permissão correta
           aws-region: us-east-1
-          audience: sts.amazonaws.com
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -54,13 +53,16 @@ jobs:
           docker push $IMAGE
           echo "image=$IMAGE" >> $GITHUB_OUTPUT
 
-      - name: Deploy to App Runner
+      - name: Deploy to app runnerAdd commentMore actions
         uses: awslabs/amazon-app-runner-deploy@main
         with:
           service: rocketseat-api
           image: ${{ steps.build-docker-image.outputs.image }}
           access-role-arn: arn:aws:iam::231224359494:role/app-runner-service-role
+
           region: us-east-1
           cpu: 1
           memory: 2
           port: 3000
+
+          
