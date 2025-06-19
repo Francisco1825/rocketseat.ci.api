@@ -1,25 +1,3 @@
-##############################
-# Provedor OIDC do GitHub Actions para AWS
-##############################
-resource "aws_iam_openid_connect_provider" "oidc_git" {
-  url = "https://token.actions.githubusercontent.com"
-
-  client_id_list = [
-    "sts.amazonaws.com"
-  ]
-
-  thumbprint_list = [
-    "6938fd4d98bab03faadb97b34396831e3780aea1"
-  ]
-
-  tags = {
-    IAC = true
-  }
-}
-
-##############################
-# Role que o GitHub Actions vai assumir via OIDC com todas permissões necessárias
-##############################
 resource "aws_iam_role" "github_app_runner_role" {
   name = "github-app-runner-role"
 
@@ -34,7 +12,7 @@ resource "aws_iam_role" "github_app_runner_role" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
           StringEquals = {
-            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com",
             "token.actions.githubusercontent.com:sub" = "repo:Francisco1825/rocketseat.ci.api:ref:refs/heads/main"
           }
         }
@@ -74,7 +52,7 @@ resource "aws_iam_role" "github_app_runner_role" {
           Sid = "IAMPassRole"
           Effect = "Allow"
           Action = "iam:PassRole"
-          Resource = "arn:aws:iam::231224359494:role/github-app-runner-role"
+          Resource = "*"
         },
         {
           Sid = "IAMCreateServiceLinkedRole"
