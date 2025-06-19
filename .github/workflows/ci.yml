@@ -51,7 +51,7 @@ jobs:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           TAG: ${{ steps.generate_tag.outputs.sha }}
         run: |
-          docker build -t $REGISTRY/rocketseat-ci:$TAG docker build -t $REGISTRY/rocketseat-ci:$TAG -f DevOps-main/api/Dockerfile DevOps-main/api/
+          docker build -t $REGISTRY/rocketseat-ci:$TAG -f DevOps-main/api/Dockerfile DevOps-main/api/
           docker push $REGISTRY/rocketseat-ci:$TAG
           echo "image=$REGISTRY/rocketseat-ci:$TAG" >> $GITHUB_OUTPUT
 
@@ -65,3 +65,4 @@ jobs:
           cpu: 1
           memory: 2
           port: 3000
+
