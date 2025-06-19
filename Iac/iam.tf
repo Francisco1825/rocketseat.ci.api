@@ -1,51 +1,84 @@
-# -------------------------------------------------------
-# ROLE: GitHub Actions (OIDC) - Assume para deploy + push
-# -------------------------------------------------------
-resource "aws_iam_role" "ecr_role" {
-  name = "ecr-role"
+
+resource "aws_iam_openid_connect_provider" "oidc-git" {
+  url = "https://token.actions.githubusercontent.com"
+  client_id_list = [
+    "sts.amazonaws.com"
+  ]
+
+  thumbprint_list = [
+    "1b511abead59c6ce207077c0bf0e0043b1382612"
+  ]
+
+  tags = {
+    IAC = "True"
+  }
+}
+
+resource "aws_iam_role" "app-runner-role" {
+  name = "app-runner-role"
 
   assume_role_policy = jsonencode({
-    Version = "2012-10-17",
+    Version = "2012-10-17"
     Statement = [
       {
         Effect = "Allow",
         Principal = {
-          Federated = "arn:aws:iam::231224359494:oidc-provider/token.actions.githubusercontent.com"
-        },
-        Action = "sts:AssumeRoleWithWebIdentity",
-        Condition = {
-          StringEquals = {
-            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com",
-            "token.actions.githubusercontent.com:sub" = "repo:Francisco1825/rocketseat.ci.api:ref:refs/heads/main"
-          }
+          "Service" = "build.apprunner.amazonaws.com"
         }
+        Action = "sts:AssumeRole"
       }
     ]
   })
+  managed_policy_arns = [
+    "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
+  ]
+  tags = {
+    IAC = "True"
+  }
+}
+
+resource "aws_iam_role" "ecr-role" {
+  name = "ecr-role"
+
+  assume_role_policy = jsonencode({
+    Statement = [
+      {
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+            "token.actions.githubusercontent.com:sub" = "repo:Francisco1825/rocketseat.ci.api:ref:refs/heads/main"
+          }
+        }
+        Effect = "Allow"
+        Principal = {
+          Federated = "arn:aws:iam::403429280851:oidc-provider/token.actions.githubusercontent.com"
+        }
+      }
+    ]
+    Version = "2012-10-17"
+  })
 
   inline_policy {
-    name = "ecr-and-apprunner-permissions"
-
+    name = "ecr-app-permissions"
     policy = jsonencode({
-      Version = "2012-10-17",
-      Statement = [
+      Statement = [{
+        Sid      = "Statement1"
+        Action   = "apprunner:*"
+        Effect   = "Allow"
+        Resource = "*"
+        },
         {
-          Sid    = "AppRunnerControl",
-          Effect = "Allow",
+          Sid = "Statement2"
           Action = [
-            "apprunner:ListServices",
-            "apprunner:DescribeService",
-            "apprunner:CreateService",
-            "apprunner:UpdateService",
-            "apprunner:PauseService",
-            "apprunner:ResumeService",
-            "apprunner:DeleteService"
-          ],
+            "iam:PassRole",
+            "iam:CreateServiceLinkedRole",
+          ]
+          Effect   = "Allow"
           Resource = "*"
         },
         {
-          Sid    = "ECRAccess",
-          Effect = "Allow",
+          Sid = "Statement3"
           Action = [
             "ecr:GetDownloadUrlForLayer",
             "ecr:BatchGetImage",
@@ -54,20 +87,9 @@ resource "aws_iam_role" "ecr_role" {
             "ecr:InitiateLayerUpload",
             "ecr:UploadLayerPart",
             "ecr:CompleteLayerUpload",
-            "ecr:GetAuthorizationToken"
-          ],
-          Resource = "*"
-        },
-        {
-          Sid    = "IAMPassRole",
-          Effect = "Allow",
-          Action = "iam:PassRole",
-          Resource = "arn:aws:iam::231224359494:role/app-runner-service-role"
-        },
-        {
-          Sid    = "IAMCreateServiceLinkedRole",
-          Effect = "Allow",
-          Action = "iam:CreateServiceLinkedRole",
+            "ecr:GetAuthorizationToken",
+          ]
+          Effect   = "Allow"
           Resource = "*"
         }
       ]
@@ -77,46 +99,4 @@ resource "aws_iam_role" "ecr_role" {
   tags = {
     IAC = "True"
   }
-}
-
-# -------------------------------------------------------
-# ROLE: App Runner - Assume para puxar imagem do ECR
-# -------------------------------------------------------
-resource "aws_iam_role" "app_runner_service_role" {
-  name = "app-runner-service-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Effect = "Allow",
-      Principal = {
-        Service = "apprunner.amazonaws.com"
-      },
-      Action = "sts:AssumeRole"
-    }]
-  })
-}
-
-resource "aws_iam_policy" "app_runner_ecr_policy" {
-  name        = "AppRunnerECRAccessPolicy"
-  description = "Policy for App Runner to access ECR"
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Effect = "Allow",
-      Action = [
-        "ecr:GetAuthorizationToken",
-        "ecr:BatchCheckLayerAvailability",
-        "ecr:GetDownloadUrlForLayer",
-        "ecr:BatchGetImage"
-      ],
-      Resource = "*"
-    }]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "app_runner_ecr_attach" {
-  role       = aws_iam_role.app_runner_service_role.name
-  policy_arn = aws_iam_policy.app_runner_ecr_policy.arn
 }
