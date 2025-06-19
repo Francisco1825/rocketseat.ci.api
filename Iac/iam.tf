@@ -18,56 +18,20 @@ resource "aws_iam_openid_connect_provider" "oidc_git" {
 }
 
 ##############################
-# Role para o AWS App Runner executar builds e serviços
+# Role que o GitHub Actions vai assumir via OIDC com todas permissões necessárias
 ##############################
-resource "aws_iam_role" "app_runner_service_role" {
-  name = "app-runner-service-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow",
-        Principal = {
-          Service = "build.apprunner.amazonaws.com"
-        }
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
-
-  managed_policy_arns = [
-    "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
-  ]
-
-  tags = {
-    IAC = "True"
-  }
-}
-
-#############################
-# Anexar política AWSAppRunnerFullAccess à role de serviço do App Runner
-#############################
-resource "aws_iam_role_policy_attachment" "app_runner_service_full_access" {
-  role       = aws_iam_role.app_runner_service_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AWSAppRunnerFullAccess"
-}
-
-#########################
-# Role que o GitHub Actions vai assumir via OIDC
-#############################
-resource "aws_iam_role" "app_runner_oidc_role" {
+resource "aws_iam_role" "github_app_runner_role" {
   name = "github-app-runner-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Action = "sts:AssumeRoleWithWebIdentity"
         Effect = "Allow"
         Principal = {
           Federated = "arn:aws:iam::231224359494:oidc-provider/token.actions.githubusercontent.com"
         }
+        Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
           StringEquals = {
             "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
@@ -79,27 +43,20 @@ resource "aws_iam_role" "app_runner_oidc_role" {
   })
 
   inline_policy {
-    name = "ecr-app-permissions"
+    name = "full-permissions-for-ecr-and-apprunner"
     policy = jsonencode({
       Version = "2012-10-17"
       Statement = [
         {
-          Sid    = "Statement1"
-          Effect = "Allow"
-          Action = "apprunner:*"
-          Resource = "*"
-        },
-        {
-          Sid    = "Statement2"
+          Sid = "AppRunnerPermissions"
           Effect = "Allow"
           Action = [
-            "iam:PassRole",
-            "iam:CreateServiceLinkedRole",
+            "apprunner:*"
           ]
           Resource = "*"
         },
         {
-          Sid    = "Statement3"
+          Sid = "ECRPermissions"
           Effect = "Allow"
           Action = [
             "ecr:GetDownloadUrlForLayer",
@@ -109,8 +66,20 @@ resource "aws_iam_role" "app_runner_oidc_role" {
             "ecr:InitiateLayerUpload",
             "ecr:UploadLayerPart",
             "ecr:CompleteLayerUpload",
-            "ecr:GetAuthorizationToken",
+            "ecr:GetAuthorizationToken"
           ]
+          Resource = "*"
+        },
+        {
+          Sid = "IAMPassRole"
+          Effect = "Allow"
+          Action = "iam:PassRole"
+          Resource = "arn:aws:iam::231224359494:role/github-app-runner-role"
+        },
+        {
+          Sid = "IAMCreateServiceLinkedRole"
+          Effect = "Allow"
+          Action = "iam:CreateServiceLinkedRole"
           Resource = "*"
         }
       ]
