@@ -1,9 +1,8 @@
 ##############################
 # Provedor OIDC do GitHub Actions para AWS
 ##############################
-resource "aws_iam_openid_connect_provider" "oidc_git" {
+resource "aws_iam_openid_connect_provider" "oidc-git" {
   url = "https://token.actions.githubusercontent.com"
-
   client_id_list = [
     "sts.amazonaws.com"
   ]
@@ -20,74 +19,105 @@ resource "aws_iam_openid_connect_provider" "oidc_git" {
 ##############################
 # Role para o AWS App Runner executar builds e serviços
 ##############################
-resource "aws_iam_role" "app_runner_role" {
+resource "aws_iam_role" "app-runner-role" {
   name = "app-runner-role"
 
   assume_role_policy = jsonencode({
-    Version = "2012-10-17",
+    Version = "2012-10-17"
     Statement = [
       {
-        Sid = "AppRunnerTrust",
         Effect = "Allow",
         Principal = {
-          Service = "build.apprunner.amazonaws.com"
-        },
+          "Service" = "build.apprunner.amazonaws.com"
+        }
         Action = "sts:AssumeRole"
       }
     ]
   })
-
   managed_policy_arns = [
-    "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+    "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
   ]
-
   tags = {
-    IAC = true
+    IAC = "True"
   }
 }
 
-#############################
-# Anexar política AWSAppRunnerFullAccess à role do App Runner
-##############################
-resource "aws_iam_role_policy_attachment" "app_runner_full_access" {
-  role       = aws_iam_role.app_runner_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AWSAppRunnerFullAccess"
-}
+# #############################
+# # Anexar política AWSAppRunnerFullAccess à role do App Runner
+# ##############################
+# resource "aws_iam_role_policy_attachment" "app_runner_full_access" {
+#   role       = aws_iam_role.app_runner_role.name
+#   policy_arn = "arn:aws:iam::aws:policy/AWSAppRunnerFullAccess"
+# }
 
 ##############################
 # Role que o GitHub Actions vai assumir via OIDC
 ##############################
-resource "aws_iam_role" "github_oidc_role" {
+# resource "aws_iam_role" "app-runner-role" {
+#   name = app-runner-role
+
+#   assume_role_policy = jsondecode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Effect = "Allow",
+#         Principal = {
+#           "Service" = "build.apprunner.amazonaws.com"
+#         }
+#         Action = "sts:AssumeRole"
+#       }
+#     ]
+#   })
+#   managed_policy_arns = [
+#     "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
+#   ]
+#   tags = {
+#     IAC = "True"
+#   }
+# }
+
+resource "aws_iam_role" "ecr-role" {
   name = "ecr-role"
 
   assume_role_policy = jsonencode({
-    Version = "2012-10-17",
     Statement = [
       {
-        Effect = "Allow",
-        Action = "sts:AssumeRoleWithWebIdentity",
-        Principal = {
-          Federated = aws_iam_openid_connect_provider.oidc_git.arn
-        },
+        Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
           StringEquals = {
-            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com",
-            "token.actions.githubusercontent.com:sub" = "repo:Francisco1825/rocketseat.ci.api:ref:refs/heads/main"
+            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+            "token.actions.githubusercontent.com:sub" = "repo:eusouodaniel/rocketseat.ci.api:ref:refs/heads/main"
           }
+        }
+        Effect = "Allow"
+        Principal = {
+          Federated = "arn:aws:iam::231224359494:oidc-provider/token.actions.githubusercontent.com"
         }
       }
     ]
+    Version = "2012-10-17"
   })
 
   inline_policy {
-    name = "ecr-app-runner-policy"
-
+    name = "ecr-app-permissions"
     policy = jsonencode({
-      Version = "2012-10-17",
-      Statement = [
+      Statement = [{
+        Sid      = "Statement1"
+        Action   = "apprunner:*"
+        Effect   = "Allow"
+        Resource = "*"
+        },
         {
-          Sid = "ECRAccess",
-          Effect = "Allow",
+          Sid = "Statement2"
+          Action = [
+            "iam:PassRole",
+            "iam:CreateServiceLinkedRole",
+          ]
+          Effect   = "Allow"
+          Resource = "*"
+        },
+        {
+          Sid = "Statement3"
           Action = [
             "ecr:GetDownloadUrlForLayer",
             "ecr:BatchGetImage",
@@ -96,52 +126,16 @@ resource "aws_iam_role" "github_oidc_role" {
             "ecr:InitiateLayerUpload",
             "ecr:UploadLayerPart",
             "ecr:CompleteLayerUpload",
-            "ecr:GetAuthorizationToken"
-          ],
+            "ecr:GetAuthorizationToken",
+          ]
+          Effect   = "Allow"
           Resource = "*"
-        },
-        {
-          Sid = "AppRunnerAccess",
-          Effect = "Allow",
-          Action = [
-            "apprunner:CreateService",
-            "apprunner:UpdateService",
-            "apprunner:DescribeService",
-            "apprunner:DeleteService",
-            "apprunner:PauseService",
-            "apprunner:ResumeService",
-            "apprunner:List*"
-          ],
-          Resource = "*"
-        },
-        {
-          Sid = "IAMPassAppRunnerRole",
-          Effect = "Allow",
-          Action = "iam:PassRole",
-          Resource = "arn:aws:iam::231224359494:role/app-runner-role",
-          Condition = {
-            StringEquals = {
-              "iam:PassedToService" = "apprunner.amazonaws.com"
-            }
-          }
-        },
-        {
-          Sid = "CreateSLRForAppRunner",
-          Effect = "Allow",
-          Action = "iam:CreateServiceLinkedRole",
-          Resource = "*",
-          Condition = {
-            StringEquals = {
-              "iam:AWSServiceName" = "build.apprunner.amazonaws.com"
-            }
-          }
         }
       ]
     })
   }
 
   tags = {
-    IAC = true
+    IAC = "True"
   }
 }
-
