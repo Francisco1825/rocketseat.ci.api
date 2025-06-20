@@ -20,5 +20,12 @@
   "homepage": "https://github.com/Francisco1825/rocketseat.ci.api#readme",
   "devDependencies": {
     "jest": "^29.7.0"
+  },
+  "dependencies": {
+    "@semantic-release/changelog": "github:semantic-release/changelog",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "github:semantic-release/git",
+    "@semantic-release/github": "github:semantic-release/github",
+    "@semantic-release/release-notes-generator": "^14.0.3"
   }
 }
