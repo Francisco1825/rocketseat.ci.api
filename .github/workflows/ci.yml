@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - master
+      - main
 
 permissions:
   id-token: write
@@ -27,9 +27,9 @@ jobs:
       with:
         # node-version: ${{ matrix.node }}
         node-version: 18
-        cache: 'yarn'
-    - run: yarn
-    - run: yarn run test
+        cache: 'npm'
+    - run: npm
+    - run: npm run test
 
     - name: Semantic release
       uses: cycjimmy/semantic-release-action@v4
