@@ -65,7 +65,7 @@ jobs:
         id: deploy-app-runner
         uses: awslabs/amazon-app-runner-deploy@main
         with:
-          service: ${{ vars.SERVICE_NAME }}
+          service: rocketseat-api
           image: ${{ steps.build-docker-image.outputs.image }}
           access-role-arn: ${{ secrets.AWS_APP_RUNNER_ROLE }}
           region: ${{ secrets.AWS_REGION }}
