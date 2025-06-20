@@ -28,7 +28,7 @@ jobs:
         # node-version: ${{ matrix.node }}
         node-version: 18
         cache: 'npm'
-    - run: npm
+    - run: npm install
     - run: npm run test
 
     - name: Semantic release
