@@ -14,9 +14,7 @@ jobs:
   build:
     name: 'Build and Push'
     runs-on: ubuntu-latest
-    # strategy:
-    #   # matrix:
-    #   #   node: [16, 18, 20]
+    
 
     steps:
     - uses: actions/checkout@v4
@@ -35,7 +33,7 @@ jobs:
       uses: cycjimmy/semantic-release-action@v4
       env:
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        
 
     - name: Generate tag
       id: generate_tag 
@@ -60,10 +58,11 @@ jobs:
         TAG: ${{ steps.generate_tag.outputs.sha }}
       run: |
         docker build -t $REGISTRY/rocketseat-ci:$TAG .
-        docker tag -t $REGISTRY/rocketseat-ci:$TAG $REGISTRY/rocketseat-ci:latest
+        docker tag $REGISTRY/rocketseat-ci:$TAG $REGISTRY/rocketseat-ci:latest
         docker push --all-tags $REGISTRY/rocketseat-ci
-        IMAGE=$(echo $REGISTRY/rocketseat-ci:$TAG)
+        IMAGE=$REGISTRY/rocketseat-ci:$TAG
         echo "image=$IMAGE" >> $GITHUB_OUTPUT
+
 
     - name: Deploy to app runner
       id: deploy-app-runner
